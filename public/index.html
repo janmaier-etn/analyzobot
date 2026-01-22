@@ -32,6 +32,20 @@
                     <button id="analyzeBtn" class="btn-primary">Analyzovat</button>
                 </div>
                 <p class="hint">Zadejte 8-místné IČO české společnosti</p>
+
+                <!-- PDF Upload Section -->
+                <div class="upload-section">
+                    <label for="pdfUpload">📎 Volitelně: Nahrajte výroční zprávy (PDF)</label>
+                    <input
+                        type="file"
+                        id="pdfUpload"
+                        accept=".pdf"
+                        multiple
+                        class="file-input"
+                    >
+                    <div id="uploadedFiles" class="uploaded-files"></div>
+                    <p class="hint">Můžete nahrát až 3 PDF soubory pro detailnější analýzu</p>
+                </div>
             </div>
         </section>
 

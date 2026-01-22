@@ -12,19 +12,27 @@ export class APIClient {
      * Fetch company data and analysis
      * @param {string} ico - Company IČO
      * @param {Function} onProgress - Progress callback
+     * @param {Array} pdfFiles - Optional uploaded PDF files
      * @returns {Promise<Object>} Analysis results
      */
-    async analyzeCompany(ico, onProgress) {
+    async analyzeCompany(ico, onProgress, pdfFiles = []) {
         try {
             // Step 1: Get company data
             onProgress({ step: 1, message: 'Získávám data o firmě...' });
             const companyData = await this.getCompanyData(ico);
 
-            // Step 2: Analyze with AI (includes opportunities)
-            onProgress({ step: 3, message: 'Provádím AI analýzu a hledám příležitosti...' });
-            const analysis = await this.getAnalysis(companyData);
+            // Step 2: Upload and extract PDFs if provided
+            let pdfTexts = [];
+            if (pdfFiles && pdfFiles.length > 0) {
+                onProgress({ step: 2, message: 'Zpracovávám nahrané výroční zprávy...' });
+                pdfTexts = await this.uploadPDFs(pdfFiles);
+            }
 
-            // Step 3: Get procurement data
+            // Step 3: Analyze with AI (includes opportunities)
+            onProgress({ step: 3, message: 'Provádím AI analýzu a hledám příležitosti...' });
+            const analysis = await this.getAnalysis(companyData, pdfTexts);
+
+            // Step 4: Get procurement data
             onProgress({ step: 4, message: 'Získávám veřejné zakázky...' });
             const procurement = await this.getProcurement(companyData);
 
@@ -37,6 +45,32 @@ export class APIClient {
             console.error('API Error:', error);
             throw new Error(error.message || 'Chyba při komunikaci se serverem');
         }
+    }
+
+    /**
+     * Upload and extract text from PDFs
+     * @param {Array} pdfFiles - PDF files to upload
+     * @returns {Promise<Array>} Extracted text from PDFs
+     */
+    async uploadPDFs(pdfFiles) {
+        const formData = new FormData();
+
+        pdfFiles.forEach((file, index) => {
+            formData.append(`pdf${index}`, file);
+        });
+
+        const response = await fetch(`${API_BASE}/upload-pdfs`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Nepodařilo se nahrát PDF soubory');
+        }
+
+        const result = await response.json();
+        return result.texts || [];
     }
 
     /**
@@ -58,15 +92,16 @@ export class APIClient {
     /**
      * Get AI analysis (PESTLE & Porter)
      * @param {Object} companyData - Company data to analyze
+     * @param {Array} pdfTexts - Optional extracted PDF texts
      * @returns {Promise<Object>} Analysis results
      */
-    async getAnalysis(companyData) {
+    async getAnalysis(companyData, pdfTexts = []) {
         const response = await fetch(`${API_BASE}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ companyData })
+            body: JSON.stringify({ companyData, pdfTexts })
         });
 
         if (!response.ok) {
