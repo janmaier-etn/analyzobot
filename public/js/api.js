@@ -24,9 +24,14 @@ export class APIClient {
             onProgress({ step: 3, message: 'Provádím AI analýzu a hledám příležitosti...' });
             const analysis = await this.getAnalysis(companyData);
 
+            // Step 3: Get procurement data
+            onProgress({ step: 4, message: 'Získávám veřejné zakázky...' });
+            const procurement = await this.getProcurement(companyData);
+
             return {
                 company: companyData,
-                analysis: analysis
+                analysis: analysis,
+                procurement: procurement
             };
         } catch (error) {
             console.error('API Error:', error);
@@ -67,6 +72,36 @@ export class APIClient {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Nepodařilo se provést analýzu');
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Get procurement data
+     * @param {Object} companyData - Company data
+     * @returns {Promise<Object>} Procurement data
+     */
+    async getProcurement(companyData) {
+        const response = await fetch(`${API_BASE}/procurement`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ companyData })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.warn('Procurement data not available:', error.error);
+            // Return empty data instead of throwing
+            return {
+                totalContracts: 0,
+                activeTenders: 0,
+                itContracts: 0,
+                contracts: [],
+                hasActiveOpportunities: false
+            };
         }
 
         return await response.json();

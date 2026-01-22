@@ -39,7 +39,13 @@ export class UIManager {
             digitalGaps: document.getElementById('digitalGaps'),
             techStack: document.getElementById('techStack'),
             growthChallenges: document.getElementById('growthChallenges'),
-            salesPitch: document.getElementById('salesPitch')
+            procurementInsights: document.getElementById('procurementInsights'),
+            salesPitch: document.getElementById('salesPitch'),
+            // Procurement
+            totalContracts: document.getElementById('totalContracts'),
+            activeTenders: document.getElementById('activeTenders'),
+            itContracts: document.getElementById('itContracts'),
+            procurementList: document.getElementById('procurementList')
         };
     }
 
@@ -123,6 +129,11 @@ export class UIManager {
         // Populate opportunities
         this.displayOpportunities(data.analysis.opportunities || {});
 
+        // Populate procurement
+        if (data.procurement) {
+            this.displayProcurement(data.procurement);
+        }
+
         // Scroll to results
         this.elements.results.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -172,6 +183,99 @@ export class UIManager {
         this.elements.digitalGaps.textContent = opportunities.digitalGaps || 'Žádné údaje';
         this.elements.techStack.textContent = opportunities.techStack || 'Žádné údaje';
         this.elements.growthChallenges.textContent = opportunities.growthChallenges || 'Žádné údaje';
+        this.elements.procurementInsights.textContent = opportunities.procurementInsights || 'Žádné údaje';
         this.elements.salesPitch.textContent = opportunities.salesPitch || 'Žádné údaje';
+    }
+
+    /**
+     * Display procurement data
+     * @param {Object} procurement - Procurement data
+     */
+    displayProcurement(procurement) {
+        // Update summary stats
+        this.elements.totalContracts.textContent = procurement.totalContracts || 0;
+        this.elements.activeTenders.textContent = procurement.activeTenders || 0;
+        this.elements.itContracts.textContent = procurement.itContracts || 0;
+
+        // Display procurement list
+        if (!procurement.contracts || procurement.contracts.length === 0) {
+            this.elements.procurementList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Nebyly nalezeny žádné veřejné zakázky</p>';
+            return;
+        }
+
+        this.elements.procurementList.innerHTML = procurement.contracts.map(contract => `
+            <div class="procurement-item ${contract.isActive ? 'active' : ''}">
+                <div class="procurement-header">
+                    <div class="procurement-title">
+                        <h3>
+                            <a href="${contract.url}" target="_blank" rel="noopener noreferrer">
+                                ${contract.title}
+                            </a>
+                        </h3>
+                    </div>
+                    <span class="procurement-status ${contract.isActive ? 'active' : 'completed'}">
+                        ${contract.isActive ? 'Aktivní' : 'Ukončená'}
+                    </span>
+                </div>
+
+                <div class="procurement-meta">
+                    ${contract.price ? `
+                        <div class="procurement-meta-item">
+                            <span>💰</span>
+                            <span>${this.formatPrice(contract.price)} ${contract.currency}</span>
+                        </div>
+                    ` : ''}
+                    ${contract.datePublished ? `
+                        <div class="procurement-meta-item">
+                            <span>📅</span>
+                            <span>${this.formatDate(contract.datePublished)}</span>
+                        </div>
+                    ` : ''}
+                    ${contract.deadline ? `
+                        <div class="procurement-meta-item">
+                            <span>⏰</span>
+                            <span>Deadline: ${this.formatDate(contract.deadline)}</span>
+                        </div>
+                    ` : ''}
+                    ${contract.customer?.name ? `
+                        <div class="procurement-meta-item">
+                            <span>🏢</span>
+                            <span>${contract.customer.name}</span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                ${contract.description ? `
+                    <p class="procurement-description">${contract.description.substring(0, 200)}${contract.description.length > 200 ? '...' : ''}</p>
+                ` : ''}
+
+                ${contract.categories && contract.categories.length > 0 ? `
+                    <div class="procurement-categories">
+                        ${contract.categories.slice(0, 3).map(cat => `
+                            <span class="procurement-category">${cat}</span>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Format price with thousands separator
+     * @param {number} price - Price
+     * @returns {string} Formatted price
+     */
+    formatPrice(price) {
+        return new Intl.NumberFormat('cs-CZ').format(price);
+    }
+
+    /**
+     * Format date to Czech format
+     * @param {string} dateString - Date string
+     * @returns {string} Formatted date
+     */
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('cs-CZ').format(date);
     }
 }

@@ -7,7 +7,16 @@
       "Bash(curl:*)",
       "Bash(node test-sales.js:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: AnalyzoBot - Sales Opportunity Analyzer for Etnetera Group\n\nFeatures:\n- AI-powered PESTLE and Porter analysis with sales focus\n- OpenAI integration for intelligent analysis\n- ARES API integration for Czech company data\n- Justice.cz scraper for annual reports\n- Sales opportunities analyzer\n- Digital gaps and tech stack assessment\n- Growth challenges identification\n- Automated sales pitch generation\n\nTech stack:\n- Frontend: HTML5, CSS3, Vanilla JavaScript\n- Backend: Node.js serverless functions\n- AI: OpenAI GPT-4o-mini\n- Data: ARES API, Justice.cz\n\n🤖 Generated with Claude Code\nEOF\n)\")",
+      "Bash(gh:*)",
+      "Bash(git config:*)",
+      "Bash(brew install:*)",
+      "Bash(sudo chown:*)",
+      "Bash(chmod:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
