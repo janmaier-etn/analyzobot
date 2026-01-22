@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Annual Reports</title>
+</head>
+<body>
+    <h1>Test Annual Reports Display</h1>
+    
+    <div id="annualReportsSection" class="hidden">
+        <h3>📄 Výroční zprávy</h3>
+        <div id="annualReportsList"></div>
+    </div>
+
+    <button onclick="testDisplay()">Test Display</button>
+
+    <style>
+        .hidden { display: none; }
+        .annual-report-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+
+    <script>
+        function testDisplay() {
+            const reports = [
+                {
+                    title: 'Výroční zpráva za rok 2023 (DEMO)',
+                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                    year: 2023,
+                    type: 'annual_report'
+                }
+            ];
+
+            console.log('Reports:', reports);
+            
+            const section = document.getElementById('annualReportsSection');
+            const list = document.getElementById('annualReportsList');
+            
+            section.classList.remove('hidden');
+            
+            list.innerHTML = reports.map(report => `
+                <div class="annual-report-item">
+                    <div>${report.title}</div>
+                    <a href="/api/download-report?url=${encodeURIComponent(report.url)}">Download</a>
+                </div>
+            `).join('');
+            
+            console.log('Display complete. Section hidden?', section.classList.contains('hidden'));
+        }
+    </script>
+</body>
+</html>

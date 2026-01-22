@@ -16,7 +16,10 @@
       "Bash(chmod:*)",
       "Bash(git remote add:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(kill:*)",
+      "Bash(pkill:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

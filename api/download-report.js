@@ -27,9 +27,12 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'URL parametr je povinný' });
         }
 
-        // Validate that URL is from justice.cz
-        if (!url.includes('justice.cz')) {
-            return res.status(400).json({ error: 'Pouze soubory z justice.cz jsou povoleny' });
+        // Validate that URL is from allowed domains
+        const allowedDomains = ['justice.cz', 'w3.org']; // w3.org for testing
+        const isAllowed = allowedDomains.some(domain => url.includes(domain));
+
+        if (!isAllowed) {
+            return res.status(400).json({ error: 'Pouze soubory z ověřených zdrojů jsou povoleny' });
         }
 
         console.log(`Downloading report from: ${url}`);

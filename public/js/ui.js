@@ -153,8 +153,14 @@ export class UIManager {
         this.elements.companyStatus.textContent = company.status || 'N/A';
 
         // Display annual reports if available
+        console.log('📄 Annual reports data:', company.annualReports);
         if (company.annualReports && company.annualReports.length > 0) {
+            console.log('✅ Displaying annual reports:', company.annualReports.length);
             this.displayAnnualReports(company.annualReports);
+        } else {
+            console.log('❌ No annual reports to display');
+            // Make sure section is hidden if no reports
+            this.elements.annualReportsSection.classList.add('hidden');
         }
     }
 
@@ -163,7 +169,9 @@ export class UIManager {
      * @param {Array} reports - Annual reports
      */
     displayAnnualReports(reports) {
+        console.log('🔧 displayAnnualReports called with:', reports);
         this.elements.annualReportsSection.classList.remove('hidden');
+        console.log('🔧 Section visibility:', !this.elements.annualReportsSection.classList.contains('hidden'));
 
         this.elements.annualReportsList.innerHTML = reports.map(report => `
             <div class="annual-report-item">
@@ -175,10 +183,11 @@ export class UIManager {
                 </div>
                 <div class="annual-report-actions">
                     ${report.url ? `
-                        <a href="/api/download-report?url=${encodeURIComponent(report.url)}"
-                           download
+                        <a href="${report.url}"
+                           target="_blank"
+                           rel="noopener noreferrer"
                            class="btn-download">
-                            📥 Stáhnout
+                            📥 Otevřít
                         </a>
                     ` : `
                         <button class="btn-download" disabled>Nedostupné</button>
