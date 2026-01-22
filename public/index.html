@@ -183,8 +183,17 @@
     </div>
 
     <footer class="footer">
-        <p>AnalyzoBot &copy; 2024 | Powered by AI</p>
+        <p>
+            AnalyzoBot &copy; <span id="currentYear"></span> |
+            Vyvinul <a href="https://janmaier.cz" target="_blank" rel="noopener noreferrer">Jan Maier</a> pro
+            <a href="https://www.etnetera.cz" target="_blank" rel="noopener noreferrer">Etnetera Group</a>
+        </p>
     </footer>
+
+    <script>
+        // Set current year dynamically
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
 
     <script type="module" src="js/app.js"></script>
 </body>
