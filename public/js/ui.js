@@ -178,7 +178,10 @@ export class UIManager {
                 <div class="annual-report-info">
                     <div class="annual-report-title">${report.title}</div>
                     <div class="annual-report-meta">
-                        Rok: ${report.year} | ${report.type === 'annual_report' ? 'Výroční zpráva' : 'Účetní závěrka'}
+                        ${report.type === 'justice_link' ?
+                            'Klikněte pro zobrazení všech dokumentů v obchodním rejstříku' :
+                            `Rok: ${report.year} | ${report.type === 'annual_report' ? 'Výroční zpráva' : 'Účetní závěrka'}`
+                        }
                     </div>
                 </div>
                 <div class="annual-report-actions">
