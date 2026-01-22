@@ -19,7 +19,9 @@
       "Bash(git commit:*)",
       "Bash(kill:*)",
       "Bash(pkill:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(node -e:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

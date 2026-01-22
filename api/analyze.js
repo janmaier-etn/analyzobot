@@ -21,13 +21,16 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { companyData } = req.body;
+        const { companyData, pdfTexts } = req.body;
 
         if (!companyData) {
             return res.status(400).json({ error: 'Data o firmě jsou povinná' });
         }
 
         console.log(`Analyzing company: ${companyData.name}`);
+        if (pdfTexts && pdfTexts.length > 0) {
+            console.log(`📄 Using ${pdfTexts.length} uploaded PDF(s) for analysis`);
+        }
 
         // Get API key and provider from environment
         const apiKey = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
@@ -43,10 +46,10 @@ export default async function handler(req, res) {
         // Initialize AI analyzer
         const analyzer = new AIAnalyzer(apiKey, provider);
 
-        // Perform analysis
+        // Perform analysis with uploaded PDFs if available
         const analysis = await analyzer.analyzeCompany(
             companyData,
-            companyData.annualReports || []
+            pdfTexts || []
         );
 
         return res.status(200).json(analysis);
