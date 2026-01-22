@@ -25,21 +25,45 @@ export default async function handler(req, res) {
         const pdfs = await parsePDFs(req);
         const texts = [];
 
-        // Extract text from each PDF
-        for (const pdf of pdfs) {
+        // Extract text from each file
+        for (const file of pdfs) {
             try {
-                const data = await pdfParse(pdf.data);
+                let text = '';
+                let info = {};
+
+                if (file.mimeType === 'application/pdf') {
+                    // Extract from PDF
+                    const data = await pdfParse(file.data);
+                    text = data.text;
+                    info = {
+                        pages: data.numpages,
+                        info: data.info
+                    };
+                    console.log(`✅ Extracted ${data.numpages} pages from PDF: ${file.filename}`);
+                } else if (file.mimeType === 'text/html' || file.mimeType === 'application/xhtml+xml') {
+                    // Extract from HTML/XHTML - remove tags
+                    text = file.data.toString('utf-8')
+                        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                        .replace(/<[^>]+>/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    console.log(`✅ Extracted text from HTML: ${file.filename}`);
+                } else if (file.mimeType === 'text/plain') {
+                    // Plain text
+                    text = file.data.toString('utf-8');
+                    console.log(`✅ Extracted text from TXT: ${file.filename}`);
+                }
+
                 texts.push({
-                    filename: pdf.filename,
-                    text: data.text,
-                    pages: data.numpages,
-                    info: data.info
+                    filename: file.filename,
+                    text: text,
+                    ...info
                 });
-                console.log(`✅ Extracted ${data.numpages} pages from ${pdf.filename}`);
             } catch (error) {
-                console.error(`Error extracting ${pdf.filename}:`, error.message);
+                console.error(`Error extracting ${file.filename}:`, error.message);
                 texts.push({
-                    filename: pdf.filename,
+                    filename: file.filename,
                     text: '',
                     error: error.message
                 });
@@ -73,7 +97,15 @@ function parsePDFs(req) {
         busboy.on('file', (fieldname, file, info) => {
             const { filename, encoding, mimeType } = info;
 
-            if (mimeType !== 'application/pdf') {
+            // Accept PDF, HTML, XHTML, and TXT files
+            const allowedTypes = [
+                'application/pdf',
+                'text/html',
+                'application/xhtml+xml',
+                'text/plain'
+            ];
+
+            if (!allowedTypes.includes(mimeType)) {
                 file.resume(); // Drain the file stream
                 return;
             }
@@ -89,10 +121,11 @@ function parsePDFs(req) {
                 pdfs.push({
                     fieldname,
                     filename,
+                    mimeType,
                     data: buffer,
                     size: buffer.length
                 });
-                console.log(`📄 Received: ${filename} (${buffer.length} bytes)`);
+                console.log(`📄 Received: ${filename} (${mimeType}, ${buffer.length} bytes)`);
             });
         });
 

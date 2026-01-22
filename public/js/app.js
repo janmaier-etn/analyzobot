@@ -54,7 +54,14 @@ class AnalyzoBot {
         const filesToAdd = Array.from(files).slice(0, 3 - this.uploadedPDFs.length);
 
         filesToAdd.forEach(file => {
-            if (file.type === 'application/pdf' && this.uploadedPDFs.length < 3) {
+            const allowedTypes = [
+                'application/pdf',
+                'text/html',
+                'application/xhtml+xml',
+                'text/plain'
+            ];
+
+            if (allowedTypes.includes(file.type) && this.uploadedPDFs.length < 3) {
                 this.uploadedPDFs.push(file);
 
                 // Create file item
