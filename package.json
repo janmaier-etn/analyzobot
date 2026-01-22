@@ -1,0 +1,25 @@
+{
+  "name": "analyzobot",
+  "version": "1.0.0",
+  "description": "AI-powered company analysis tool with PESTLE and Porter analysis",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "vercel:dev": "vercel dev",
+    "build": "vercel build",
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["analysis", "pestle", "porter", "company", "AI"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.5",
+    "cheerio": "^1.0.0-rc.12",
+    "pdf-parse": "^1.1.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.1"
+  }
+}
