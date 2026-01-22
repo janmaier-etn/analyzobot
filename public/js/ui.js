@@ -175,9 +175,8 @@ export class UIManager {
                 </div>
                 <div class="annual-report-actions">
                     ${report.url ? `
-                        <a href="${report.url}"
-                           target="_blank"
-                           rel="noopener noreferrer"
+                        <a href="/api/download-report?url=${encodeURIComponent(report.url)}"
+                           download
                            class="btn-download">
                             📥 Stáhnout
                         </a>
