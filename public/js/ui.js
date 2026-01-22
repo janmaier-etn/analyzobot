@@ -45,7 +45,10 @@ export class UIManager {
             totalContracts: document.getElementById('totalContracts'),
             activeTenders: document.getElementById('activeTenders'),
             itContracts: document.getElementById('itContracts'),
-            procurementList: document.getElementById('procurementList')
+            procurementList: document.getElementById('procurementList'),
+            // Annual Reports
+            annualReportsSection: document.getElementById('annualReportsSection'),
+            annualReportsList: document.getElementById('annualReportsList')
         };
     }
 
@@ -148,6 +151,42 @@ export class UIManager {
         this.elements.companyAddress.textContent = company.address || 'N/A';
         this.elements.companyLegalForm.textContent = company.legalForm || 'N/A';
         this.elements.companyStatus.textContent = company.status || 'N/A';
+
+        // Display annual reports if available
+        if (company.annualReports && company.annualReports.length > 0) {
+            this.displayAnnualReports(company.annualReports);
+        }
+    }
+
+    /**
+     * Display annual reports
+     * @param {Array} reports - Annual reports
+     */
+    displayAnnualReports(reports) {
+        this.elements.annualReportsSection.classList.remove('hidden');
+
+        this.elements.annualReportsList.innerHTML = reports.map(report => `
+            <div class="annual-report-item">
+                <div class="annual-report-info">
+                    <div class="annual-report-title">${report.title}</div>
+                    <div class="annual-report-meta">
+                        Rok: ${report.year} | ${report.type === 'annual_report' ? 'Výroční zpráva' : 'Účetní závěrka'}
+                    </div>
+                </div>
+                <div class="annual-report-actions">
+                    ${report.url ? `
+                        <a href="${report.url}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn-download">
+                            📥 Stáhnout
+                        </a>
+                    ` : `
+                        <button class="btn-download" disabled>Nedostupné</button>
+                    `}
+                </div>
+            </div>
+        `).join('');
     }
 
     /**
