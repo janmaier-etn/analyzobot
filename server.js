@@ -30,6 +30,8 @@ const MIME_TYPES = {
 import companyDataHandler from './api/company-data.js';
 import analyzeHandler from './api/analyze.js';
 import findVendorsHandler from './api/find-vendors.js';
+import uploadPdfsHandler from './api/upload-pdfs.js';
+import procurementHandler from './api/procurement.js';
 
 const server = createServer(async (req, res) => {
     console.log(`${req.method} ${req.url}`);
@@ -64,8 +66,8 @@ async function handleApiRoute(req, res) {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
 
-    // Parse body for POST requests
-    if (req.method === 'POST') {
+    // Parse body for POST requests (but not for upload-pdfs which handles multipart itself)
+    if (req.method === 'POST' && pathname !== '/api/upload-pdfs') {
         let body = '';
         req.on('data', chunk => {
             body += chunk.toString();
@@ -111,6 +113,10 @@ async function handleApiRoute(req, res) {
             await analyzeHandler(req, vercelRes);
         } else if (pathname === '/api/find-vendors') {
             await findVendorsHandler(req, vercelRes);
+        } else if (pathname === '/api/upload-pdfs') {
+            await uploadPdfsHandler(req, vercelRes);
+        } else if (pathname === '/api/procurement') {
+            await procurementHandler(req, vercelRes);
         } else {
             vercelRes.status(404).json({ error: 'API endpoint not found' });
         }
