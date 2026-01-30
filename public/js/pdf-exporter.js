@@ -1,18 +1,27 @@
 /**
  * PDF Exporter
- * Exports analysis results to PDF format
+ * Exports analysis results to PDF format using html2pdf
  */
-
-import { jsPDF } from 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm';
 
 export class PDFExporter {
     constructor() {
-        this.pageWidth = 210; // A4 width in mm
-        this.pageHeight = 297; // A4 height in mm
-        this.margin = 20;
-        this.contentWidth = this.pageWidth - (this.margin * 2);
-        this.lineHeight = 7;
-        this.currentY = this.margin;
+        // Load html2pdf library dynamically
+        this.loadLibrary();
+    }
+
+    /**
+     * Load html2pdf library
+     */
+    async loadLibrary() {
+        if (window.html2pdf) return;
+
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
     }
 
     /**
@@ -21,218 +30,361 @@ export class PDFExporter {
      * @param {Object} analysis - Analysis results
      */
     async exportToPDF(companyData, analysis) {
-        const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-        });
+        // Ensure library is loaded
+        await this.loadLibrary();
 
-        this.currentY = this.margin;
+        // Create HTML content
+        const htmlContent = this.generateHTML(companyData, analysis);
 
-        // Title
-        this.addTitle(doc, 'AnalyzoBot - AI Analýza Firmy');
-        this.currentY += 10;
+        // Create temporary container
+        const container = document.createElement('div');
+        container.innerHTML = htmlContent;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.width = '210mm';
+        document.body.appendChild(container);
 
-        // Company Info
-        this.addSectionHeader(doc, 'Základní informace o firmě');
-        this.addText(doc, `Název: ${companyData.name}`);
-        this.addText(doc, `IČO: ${companyData.ico}`);
-        this.addText(doc, `Sídlo: ${companyData.address}`);
-        this.addText(doc, `Právní forma: ${companyData.legalForm}`);
-        this.addText(doc, `Stav: ${companyData.status}`);
-        this.currentY += 5;
+        try {
+            // PDF options
+            const opt = {
+                margin: [15, 15, 20, 15],
+                filename: `analyza_${companyData.ico}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait',
+                    compress: true
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
 
-        // PESTLE Analysis
-        if (analysis.pestle) {
-            this.addSectionHeader(doc, 'PESTLE Analýza');
-
-            this.addSubsectionHeader(doc, 'Political (Politické)');
-            this.addWrappedText(doc, analysis.pestle.political);
-
-            this.addSubsectionHeader(doc, 'Economic (Ekonomické)');
-            this.addWrappedText(doc, analysis.pestle.economic);
-
-            this.addSubsectionHeader(doc, 'Social (Sociální)');
-            this.addWrappedText(doc, analysis.pestle.social);
-
-            this.addSubsectionHeader(doc, 'Technological (Technologické)');
-            this.addWrappedText(doc, analysis.pestle.technological);
-
-            this.addSubsectionHeader(doc, 'Legal (Právní)');
-            this.addWrappedText(doc, analysis.pestle.legal);
-
-            this.addSubsectionHeader(doc, 'Environmental (Environmentální)');
-            this.addWrappedText(doc, analysis.pestle.environmental);
+            // Generate PDF
+            await html2pdf().set(opt).from(container).save();
+        } finally {
+            // Remove temporary container
+            document.body.removeChild(container);
         }
-
-        // Check if need new page
-        if (this.currentY > this.pageHeight - 60) {
-            doc.addPage();
-            this.currentY = this.margin;
-        }
-
-        // Porter's Five Forces
-        if (analysis.porter) {
-            this.addSectionHeader(doc, "Porter's Five Forces");
-
-            this.addSubsectionHeader(doc, 'Vyjednávací síla dodavatelů');
-            this.addWrappedText(doc, analysis.porter.suppliers);
-
-            this.addSubsectionHeader(doc, 'Vyjednávací síla zákazníků');
-            this.addWrappedText(doc, analysis.porter.buyers);
-
-            this.addSubsectionHeader(doc, 'Hrozba nových konkurentů');
-            this.addWrappedText(doc, analysis.porter.newEntrants);
-
-            this.addSubsectionHeader(doc, 'Hrozba substitutů');
-            this.addWrappedText(doc, analysis.porter.substitutes);
-
-            this.addSubsectionHeader(doc, 'Rivalita v odvětví');
-            this.addWrappedText(doc, analysis.porter.rivalry);
-        }
-
-        // Sales Opportunities
-        if (analysis.opportunities) {
-            // Check if need new page
-            if (this.currentY > this.pageHeight - 60) {
-                doc.addPage();
-                this.currentY = this.margin;
-            }
-
-            this.addSectionHeader(doc, 'Sales Opportunities pro Etnetera Group');
-
-            if (analysis.opportunities.digitalGaps) {
-                this.addSubsectionHeader(doc, 'Digitální mezery a slabiny');
-                this.addWrappedText(doc, analysis.opportunities.digitalGaps);
-            }
-
-            if (analysis.opportunities.techStack) {
-                this.addSubsectionHeader(doc, 'Technologický stack a modernizace');
-                this.addWrappedText(doc, analysis.opportunities.techStack);
-            }
-
-            if (analysis.opportunities.growthChallenges) {
-                this.addSubsectionHeader(doc, 'Výzvy růstu');
-                this.addWrappedText(doc, analysis.opportunities.growthChallenges);
-            }
-
-            if (analysis.opportunities.procurementInsights) {
-                this.addSubsectionHeader(doc, 'Veřejné zakázky a výběrová řízení');
-                this.addWrappedText(doc, analysis.opportunities.procurementInsights);
-            }
-
-            if (analysis.opportunities.salesPitch) {
-                this.addSubsectionHeader(doc, 'Sales Pitch - Jak je oslovit');
-                this.addWrappedText(doc, analysis.opportunities.salesPitch);
-            }
-        }
-
-        // Footer
-        const pageCount = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.setFontSize(8);
-            doc.setTextColor(128, 128, 128);
-            doc.text(
-                `Strana ${i} z ${pageCount} | Vygenerováno ${new Date().toLocaleDateString('cs-CZ')} | AnalyzoBot by Jan Maier`,
-                this.pageWidth / 2,
-                this.pageHeight - 10,
-                { align: 'center' }
-            );
-        }
-
-        // Save PDF
-        const fileName = `analyza_${companyData.ico}_${new Date().toISOString().split('T')[0]}.pdf`;
-        doc.save(fileName);
     }
 
     /**
-     * Add title to PDF
+     * Generate HTML content for PDF
      */
-    addTitle(doc, text) {
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0, 0, 0);
-        doc.text(text, this.margin, this.currentY);
-        this.currentY += 10;
+    generateHTML(companyData, analysis) {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            color: #2d3748;
+            line-height: 1.6;
+            font-size: 11pt;
+        }
+
+        .pdf-container {
+            max-width: 180mm;
+            margin: 0 auto;
+            padding: 10mm;
+        }
+
+        h1 {
+            color: #0066cc;
+            font-size: 24pt;
+            margin-bottom: 5mm;
+            text-align: center;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 3mm;
+        }
+
+        h2 {
+            color: #0066cc;
+            font-size: 16pt;
+            margin-top: 8mm;
+            margin-bottom: 4mm;
+            border-left: 4px solid #0066cc;
+            padding-left: 3mm;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            color: #2d3748;
+            font-size: 12pt;
+            margin-top: 4mm;
+            margin-bottom: 2mm;
+            font-weight: 600;
+            page-break-after: avoid;
+        }
+
+        .company-info {
+            background: #f7fafc;
+            padding: 4mm;
+            border-radius: 2mm;
+            margin-bottom: 6mm;
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-row {
+            margin-bottom: 2mm;
+            display: flex;
+        }
+
+        .info-label {
+            font-weight: 600;
+            min-width: 25mm;
+            color: #4a5568;
+        }
+
+        .info-value {
+            color: #2d3748;
+            flex: 1;
+        }
+
+        .section {
+            margin-bottom: 6mm;
+            page-break-inside: avoid;
+        }
+
+        .subsection {
+            margin-bottom: 4mm;
+            padding-left: 3mm;
+            page-break-inside: avoid;
+        }
+
+        p {
+            margin-bottom: 3mm;
+            text-align: justify;
+            hyphens: auto;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .section-subtitle {
+            color: #718096;
+            font-size: 10pt;
+            font-style: italic;
+            margin-bottom: 3mm;
+        }
+
+        .footer {
+            margin-top: 10mm;
+            padding-top: 3mm;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 9pt;
+            color: #718096;
+        }
+
+        ul {
+            margin-left: 5mm;
+            margin-bottom: 3mm;
+        }
+
+        li {
+            margin-bottom: 1mm;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-container">
+        <h1>AnalyzoBot - AI Analýza Firmy</h1>
+
+        <div class="section">
+            <h2>Základní informace o firmě</h2>
+            <div class="company-info">
+                <div class="info-row">
+                    <span class="info-label">Název:</span>
+                    <span class="info-value">${this.escape(companyData.name)}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IČO:</span>
+                    <span class="info-value">${this.escape(companyData.ico)}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Sídlo:</span>
+                    <span class="info-value">${this.escape(companyData.address)}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Právní forma:</span>
+                    <span class="info-value">${this.escape(companyData.legalForm)}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Stav:</span>
+                    <span class="info-value">${this.escape(companyData.status)}</span>
+                </div>
+            </div>
+        </div>
+
+        ${analysis.pestle ? `
+        <div class="section page-break">
+            <h2>PESTLE Analýza</h2>
+            <p class="section-subtitle">Analýza makroekonomického prostředí firmy</p>
+
+            <div class="subsection">
+                <h3>🏛️ Political (Politické)</h3>
+                <p>${this.formatText(analysis.pestle.political)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>💰 Economic (Ekonomické)</h3>
+                <p>${this.formatText(analysis.pestle.economic)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>👥 Social (Sociální)</h3>
+                <p>${this.formatText(analysis.pestle.social)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>🔬 Technological (Technologické)</h3>
+                <p>${this.formatText(analysis.pestle.technological)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>⚖️ Legal (Právní)</h3>
+                <p>${this.formatText(analysis.pestle.legal)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>🌍 Environmental (Environmentální)</h3>
+                <p>${this.formatText(analysis.pestle.environmental)}</p>
+            </div>
+        </div>
+        ` : ''}
+
+        ${analysis.porter ? `
+        <div class="section page-break">
+            <h2>Porter's Five Forces</h2>
+            <p class="section-subtitle">Analýza konkurenčního prostředí</p>
+
+            <div class="subsection">
+                <h3>🤝 Vyjednávací síla dodavatelů</h3>
+                <p>${this.formatText(analysis.porter.suppliers)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>🛒 Vyjednávací síla zákazníků</h3>
+                <p>${this.formatText(analysis.porter.buyers)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>🚪 Hrozba nových konkurentů</h3>
+                <p>${this.formatText(analysis.porter.newEntrants)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>🔄 Hrozba substitutů</h3>
+                <p>${this.formatText(analysis.porter.substitutes)}</p>
+            </div>
+
+            <div class="subsection">
+                <h3>⚔️ Rivalita v odvětví</h3>
+                <p>${this.formatText(analysis.porter.rivalry)}</p>
+            </div>
+        </div>
+        ` : ''}
+
+        ${analysis.opportunities ? `
+        <div class="section page-break">
+            <h2>🎯 Sales Opportunities pro Etnetera Group</h2>
+            <p class="section-subtitle">Příležitosti a doporučení jak firmu oslovit</p>
+
+            ${analysis.opportunities.digitalGaps ? `
+            <div class="subsection">
+                <h3>🔍 Digitální mezery a slabiny</h3>
+                <p>${this.formatText(analysis.opportunities.digitalGaps)}</p>
+            </div>
+            ` : ''}
+
+            ${analysis.opportunities.techStack ? `
+            <div class="subsection">
+                <h3>💻 Technologický stack a modernizace</h3>
+                <p>${this.formatText(analysis.opportunities.techStack)}</p>
+            </div>
+            ` : ''}
+
+            ${analysis.opportunities.growthChallenges ? `
+            <div class="subsection">
+                <h3>📈 Výzvy růstu</h3>
+                <p>${this.formatText(analysis.opportunities.growthChallenges)}</p>
+            </div>
+            ` : ''}
+
+            ${analysis.opportunities.procurementInsights ? `
+            <div class="subsection">
+                <h3>📋 Veřejné zakázky a výběrová řízení</h3>
+                <p>${this.formatText(analysis.opportunities.procurementInsights)}</p>
+            </div>
+            ` : ''}
+
+            ${analysis.opportunities.salesPitch ? `
+            <div class="subsection">
+                <h3>💡 Sales Pitch - Jak je oslovit</h3>
+                <p>${this.formatText(analysis.opportunities.salesPitch)}</p>
+            </div>
+            ` : ''}
+        </div>
+        ` : ''}
+
+        <div class="footer">
+            <p>Vygenerováno ${new Date().toLocaleDateString('cs-CZ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })}</p>
+            <p>AnalyzoBot by Jan Maier pro Etnetera Group</p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
     }
 
     /**
-     * Add section header
+     * Escape HTML special characters
      */
-    addSectionHeader(doc, text) {
-        // Check if need new page
-        if (this.currentY > this.pageHeight - 40) {
-            doc.addPage();
-            this.currentY = this.margin;
-        }
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0, 102, 204);
-        doc.text(text, this.margin, this.currentY);
-        this.currentY += 8;
+    escape(text) {
+        if (!text) return 'N/A';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     /**
-     * Add subsection header
+     * Format text with proper line breaks and bullet points
      */
-    addSubsectionHeader(doc, text) {
-        // Check if need new page
-        if (this.currentY > this.pageHeight - 30) {
-            doc.addPage();
-            this.currentY = this.margin;
-        }
+    formatText(text) {
+        if (!text) return 'N/A';
 
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0, 0, 0);
-        doc.text(text, this.margin, this.currentY);
-        this.currentY += 6;
-    }
+        text = String(text);
 
-    /**
-     * Add regular text
-     */
-    addText(doc, text) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(0, 0, 0);
-        doc.text(text, this.margin, this.currentY);
-        this.currentY += this.lineHeight;
-    }
+        // Convert bullet points
+        text = text.replace(/^[•\-\*]\s+/gm, '• ');
 
-    /**
-     * Add text with word wrapping
-     */
-    addWrappedText(doc, text) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(60, 60, 60);
+        // Convert newlines to HTML breaks
+        text = text.replace(/\n/g, '<br>');
 
-        // Ensure text is a string
-        if (!text) {
-            text = 'N/A';
-        }
-        if (typeof text !== 'string') {
-            text = String(text);
-        }
-
-        // Clean and split text
-        const cleanText = text.replace(/\n\n+/g, '\n').trim();
-        const lines = doc.splitTextToSize(cleanText, this.contentWidth);
-
-        lines.forEach(line => {
-            // Check if need new page
-            if (this.currentY > this.pageHeight - 20) {
-                doc.addPage();
-                this.currentY = this.margin;
-            }
-
-            doc.text(line, this.margin, this.currentY);
-            this.currentY += this.lineHeight;
-        });
-
-        this.currentY += 3; // Extra space after wrapped text
+        // Escape HTML
+        return this.escape(text).replace(/&lt;br&gt;/g, '<br>');
     }
 }
