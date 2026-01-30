@@ -132,8 +132,8 @@ export class PDFExporter {
         h2 {
             color: #0066cc;
             font-size: 16pt;
-            margin-top: 8mm;
-            margin-bottom: 4mm;
+            margin-top: 6mm;
+            margin-bottom: 3mm;
             border-left: 4px solid #0066cc;
             padding-left: 3mm;
             page-break-after: avoid;
@@ -142,8 +142,8 @@ export class PDFExporter {
         h3 {
             color: #2d3748;
             font-size: 12pt;
-            margin-top: 4mm;
-            margin-bottom: 2mm;
+            margin-top: 3mm;
+            margin-bottom: 1.5mm;
             font-weight: 600;
             page-break-after: avoid;
         }
@@ -173,18 +173,18 @@ export class PDFExporter {
         }
 
         .section {
-            margin-bottom: 6mm;
+            margin-bottom: 4mm;
             page-break-inside: avoid;
         }
 
         .subsection {
-            margin-bottom: 4mm;
+            margin-bottom: 3mm;
             padding-left: 3mm;
             page-break-inside: avoid;
         }
 
         p {
-            margin-bottom: 3mm;
+            margin-bottom: 2mm;
             text-align: justify;
             hyphens: auto;
             word-wrap: break-word;
@@ -252,7 +252,7 @@ export class PDFExporter {
         </div>
 
         ${analysis.pestle ? `
-        <div class="section page-break">
+        <div class="section">
             <h2>PESTLE Analýza</h2>
             <p class="section-subtitle">Analýza makroekonomického prostředí firmy</p>
 
@@ -289,7 +289,7 @@ export class PDFExporter {
         ` : ''}
 
         ${analysis.porter ? `
-        <div class="section page-break">
+        <div class="section">
             <h2>Porter's Five Forces</h2>
             <p class="section-subtitle">Analýza konkurenčního prostředí</p>
 
@@ -321,7 +321,7 @@ export class PDFExporter {
         ` : ''}
 
         ${analysis.opportunities ? `
-        <div class="section page-break">
+        <div class="section">
             <h2>🎯 Sales Opportunities pro Etnetera Group</h2>
             <p class="section-subtitle">Příležitosti a doporučení jak firmu oslovit</p>
 
