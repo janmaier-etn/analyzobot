@@ -4,12 +4,15 @@
 
 import { APIClient } from './api.js';
 import { UIManager } from './ui.js';
+import { PDFExporter } from './pdf-exporter.js';
 
 class AnalyzoBot {
     constructor() {
         this.api = new APIClient();
         this.ui = new UIManager();
+        this.pdfExporter = new PDFExporter();
         this.uploadedPDFs = [];
+        this.currentResults = null; // Store current analysis results
         this.initEventListeners();
     }
 
@@ -20,6 +23,7 @@ class AnalyzoBot {
         const icoInput = document.getElementById('ico');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const pdfUpload = document.getElementById('pdfUpload');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
 
         // Analyze button click
         analyzeBtn.addEventListener('click', () => {
@@ -41,6 +45,11 @@ class AnalyzoBot {
         // PDF upload handler
         pdfUpload.addEventListener('change', (e) => {
             this.handlePDFUpload(e.target.files);
+        });
+
+        // Export to PDF button
+        exportPdfBtn.addEventListener('click', () => {
+            this.handleExportPDF();
         });
     }
 
@@ -161,6 +170,9 @@ class AnalyzoBot {
             // Display results
             this.ui.displayResults(results);
 
+            // Store results for PDF export
+            this.currentResults = results;
+
         } catch (error) {
             console.error('Analysis error:', error);
             this.ui.showError(error.message || 'Nastala chyba při analýze. Zkuste to prosím znovu.');
@@ -168,6 +180,26 @@ class AnalyzoBot {
             // Re-enable button
             analyzeBtn.disabled = false;
             icoInput.disabled = false;
+        }
+    }
+
+    /**
+     * Handle PDF export
+     */
+    async handleExportPDF() {
+        if (!this.currentResults) {
+            this.ui.showError('Nejdříve musíte provést analýzu firmy');
+            return;
+        }
+
+        try {
+            await this.pdfExporter.exportToPDF(
+                this.currentResults.company,
+                this.currentResults.analysis
+            );
+        } catch (error) {
+            console.error('PDF export error:', error);
+            this.ui.showError('Nepodařilo se exportovat PDF: ' + error.message);
         }
     }
 }
