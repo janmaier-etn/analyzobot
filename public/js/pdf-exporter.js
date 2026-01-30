@@ -36,39 +36,58 @@ export class PDFExporter {
         // Create HTML content
         const htmlContent = this.generateHTML(companyData, analysis);
 
-        // Create temporary container
+        // Create temporary container with proper styling
         const container = document.createElement('div');
-        container.innerHTML = htmlContent;
-        container.style.position = 'absolute';
+        container.style.position = 'fixed';
         container.style.left = '-9999px';
+        container.style.top = '0';
         container.style.width = '210mm';
+        container.style.backgroundColor = 'white';
+        container.innerHTML = htmlContent;
         document.body.appendChild(container);
+
+        // Wait for images and content to load
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         try {
             // PDF options
             const opt = {
-                margin: [15, 15, 20, 15],
+                margin: [10, 10, 10, 10],
                 filename: `analyza_${companyData.ico}_${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.95 },
+                image: {
+                    type: 'jpeg',
+                    quality: 0.98
+                },
                 html2canvas: {
                     scale: 2,
                     useCORS: true,
-                    letterRendering: true
+                    letterRendering: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
                 },
                 jsPDF: {
                     unit: 'mm',
                     format: 'a4',
-                    orientation: 'portrait',
-                    compress: true
+                    orientation: 'portrait'
                 },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                pagebreak: {
+                    mode: ['avoid-all', 'css', 'legacy'],
+                    before: '.page-break'
+                }
             };
 
+            // Get the actual content element
+            const element = container.querySelector('.pdf-container');
+
             // Generate PDF
-            await html2pdf().set(opt).from(container).save();
+            await html2pdf().set(opt).from(element).save();
         } finally {
-            // Remove temporary container
-            document.body.removeChild(container);
+            // Remove temporary container after a small delay
+            setTimeout(() => {
+                if (container.parentNode) {
+                    document.body.removeChild(container);
+                }
+            }, 1000);
         }
     }
 

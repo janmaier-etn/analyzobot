@@ -21,7 +21,9 @@
       "Bash(pkill:*)",
       "Bash(python3:*)",
       "Bash(node -e:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
