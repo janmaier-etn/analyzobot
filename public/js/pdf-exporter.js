@@ -210,6 +210,14 @@ export class PDFExporter {
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(60, 60, 60);
 
+        // Ensure text is a string
+        if (!text) {
+            text = 'N/A';
+        }
+        if (typeof text !== 'string') {
+            text = String(text);
+        }
+
         // Clean and split text
         const cleanText = text.replace(/\n\n+/g, '\n').trim();
         const lines = doc.splitTextToSize(cleanText, this.contentWidth);

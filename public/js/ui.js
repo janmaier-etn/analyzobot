@@ -178,8 +178,8 @@ export class UIManager {
                 <div class="annual-report-info">
                     <div class="annual-report-title">${report.title}</div>
                     <div class="annual-report-meta">
-                        ${report.type === 'justice_link' || report.type === 'firmy_link' ?
-                            'Klikněte pro zobrazení dokumentů na externím portálu' :
+                        ${report.type === 'justice_link' ?
+                            'Klikněte pro vyhledání dokumentů v registru Justice.cz' :
                             `Rok: ${report.year} | ${report.type === 'annual_report' ? 'Výroční zpráva' : 'Účetní závěrka'}`
                         }
                     </div>
